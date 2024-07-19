@@ -1,14 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { auth } from "../lib/firebase";
-import { signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
+import {
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut,
+  onAuthStateChanged,
+} from "firebase/auth";
+import { useApolloClient } from "@apollo/client";
+import { auth } from "../lib/firebase"; // 確保這個路徑是正確的
 
 export default function Auth() {
   const [user, setUser] = useState(null);
+  const router = useRouter();
+  const client = useApolloClient();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
     });
 
@@ -18,7 +28,10 @@ export default function Auth() {
   const signIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      console.log("Sign in successful:", result.user);
+      await client.resetStore(); // 重置 Apollo store
+      router.refresh();
     } catch (error) {
       console.error("Error signing in with Google", error);
     }
@@ -27,6 +40,8 @@ export default function Auth() {
   const logOut = async () => {
     try {
       await signOut(auth);
+      await client.resetStore();
+      router.refresh();
     } catch (error) {
       console.error("Error signing out", error);
     }

@@ -1,5 +1,4 @@
 "use client";
-
 import { useQuery, gql } from "@apollo/client";
 
 const GET_TRANSACTIONS = gql`
@@ -14,7 +13,7 @@ const GET_TRANSACTIONS = gql`
   }
 `;
 
-export default function TransactionList() {
+function TransactionList() {
   const { loading, error, data } = useQuery(GET_TRANSACTIONS);
 
   if (loading) return <p>Loading...</p>;
@@ -22,20 +21,19 @@ export default function TransactionList() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-2">Transactions</h2>
+      <h2>Transactions</h2>
       <ul>
         {data.getTransactions.map((transaction) => (
-          <li key={transaction.id} className="mb-2 p-2 bg-gray-100 rounded">
-            <p className="font-semibold">{transaction.description}</p>
-            <p>
-              ${transaction.amount} - {transaction.category}
-            </p>
-            <p className="text-sm text-gray-500">
-              {new Date(transaction.date).toLocaleDateString()}
-            </p>
+          <li key={transaction.id}>
+            {transaction.description} - ${transaction.amount}
+            <br />
+            {transaction.category} |{" "}
+            {new Date(transaction.date).toLocaleDateString()}
           </li>
         ))}
       </ul>
     </div>
   );
 }
+
+export default TransactionList;

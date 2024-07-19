@@ -1,9 +1,10 @@
 import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
+
 import { setContext } from "@apollo/client/link/context";
-import { getAuth } from "firebase/auth";
+import { getAuth, getIdToken } from "firebase/auth";
 
 const httpLink = createHttpLink({
-  uri: "http://localhost:4000/graphql",
+  uri: "http://localhost:4005/graphql", // 確保這是正確的後端 URL
 });
 
 const authLink = setContext(async (_, { headers }) => {

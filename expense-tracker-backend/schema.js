@@ -10,25 +10,8 @@ const typeDefs = gql`
   }
 
   type Query {
-    getTransactions: [Transaction!]!
-  }
-
-  type Mutation {
-    addTransaction(
-      amount: Float!
-      description: String!
-      category: String!
-      date: String!
-    ): Transaction!
-    updateTransaction(
-      id: ID!
-      amount: Float
-      description: String
-      category: String
-      date: String
-    ): Transaction!
-    deleteTransaction(id: ID!): Boolean!
+    getTransactions: [Transaction]
   }
 `;
 
-module.exports = { typeDefs };
+module.exports = typeDefs;
