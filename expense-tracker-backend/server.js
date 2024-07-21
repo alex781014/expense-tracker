@@ -12,30 +12,40 @@ app.use(cors());
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
-console.log("TypeDefs:", typeDefs);
-console.log("Resolvers:", JSON.stringify(resolvers, null, 2));
 const server = new ApolloServer({
   typeDefs,
   resolvers,
   context: async ({ req }) => {
-    const token = req.headers.authorization || "";
+    // console.log("Context function called");
+    const authHeader = req.headers.authorization || "";
+    // console.log("Auth header:", authHeader);
+
+    if (!authHeader.startsWith("Bearer ")) {
+    //   console.log("Invalid auth header format");
+      return { user: null };
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    // console.log("Extracted token:", idToken.substring(0, 10) + "...");
+
     try {
-      const decodedToken = await admin
-        .auth()
-        .verifyIdToken(token.replace("Bearer ", ""));
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+    //   console.log("Token verified successfully. User ID:", decodedToken.uid);
       return { user: decodedToken };
     } catch (error) {
-      console.error("Token verification error:", error);
+    //   console.error("Token verification error:", error.code, error.message);
       return { user: null };
     }
   },
+  playground: true,
+  introspection: true,
 });
 
 async function startServer() {
   await server.start();
   server.applyMiddleware({ app });
 
-  const PORT = process.env.PORT || 4000;
+  const PORT = process.env.PORT 
   app.listen(PORT, () => {
     console.log(
       `Server running on http://localhost:${PORT}${server.graphqlPath}`

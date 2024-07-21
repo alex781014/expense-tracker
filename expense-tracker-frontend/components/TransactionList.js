@@ -16,23 +16,26 @@ const GET_TRANSACTIONS = gql`
 function TransactionList() {
   const { loading, error, data } = useQuery(GET_TRANSACTIONS);
 
+  console.log("Query result:", { loading, error, data });
+
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
+  if (error) {
+    console.error("Apollo error:", error);
+    return <p>Error: {error.message}</p>;
+  }
+
+  if (!data || !data.getTransactions) {
+    return <p>No transactions found</p>;
+  }
 
   return (
-    <div>
-      <h2>Transactions</h2>
-      <ul>
-        {data.getTransactions.map((transaction) => (
-          <li key={transaction.id}>
-            {transaction.description} - ${transaction.amount}
-            <br />
-            {transaction.category} |{" "}
-            {new Date(transaction.date).toLocaleDateString()}
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul>
+      {data.getTransactions.map((transaction) => (
+        <li key={transaction.id}>
+          {transaction.description} - ${transaction.amount}
+        </li>
+      ))}
+    </ul>
   );
 }
 
