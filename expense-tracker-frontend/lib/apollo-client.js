@@ -1,9 +1,10 @@
-import { getAuth, getIdToken } from "firebase/auth";
-import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client";
+import { ApolloClient, InMemoryCache, createHttpLink } from "@apollo/client";
+
 import { setContext } from "@apollo/client/link/context";
+import { getAuth, getIdToken } from "firebase/auth";
 
 const httpLink = createHttpLink({
-  uri: "http://localhost:4005/graphql",
+  uri: "http://localhost:4005/graphql", // 確保這是正確的後端 URL
 });
 
 const authLink = setContext(async (_, { headers }) => {
@@ -11,7 +12,7 @@ const authLink = setContext(async (_, { headers }) => {
   if (auth.currentUser) {
     try {
       const token = await getIdToken(auth.currentUser, true);
-      console.log("Sending token:", token.substring(0, 10) + "...");
+      console.log("Token being sent:", token); // 添加這行來檢查發送的 token
       return {
         headers: {
           ...headers,
@@ -22,7 +23,6 @@ const authLink = setContext(async (_, { headers }) => {
       console.error("Error getting token:", error);
     }
   }
-  console.log("No current user, not sending token");
   return { headers };
 });
 

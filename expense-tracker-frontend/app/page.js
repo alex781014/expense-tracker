@@ -1,16 +1,80 @@
 // app/page.js
+"use client";
+
+import { useState, useEffect } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "../lib/firebase";
+import { signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import TransactionInput from "@/components/TransactionInput";
+import MonthlyDetails from "@/components/MonthlyDetails";
 
 export default function Home() {
+  const [user, loading] = useAuthState(auth);
+const [selectedMonth, setSelectedMonth] = useState(() => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+});
+
+
+  const signInWithGoogle = () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider);
+  };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-gray-100 flex flex-col justify-center items-center">
+        <h1 className="text-4xl font-bold mb-5 text-gray-800">消費追蹤器</h1>
+        <button
+          onClick={signInWithGoogle}
+          className="px-4 py-2 border flex gap-2 border-slate-200 rounded-lg text-slate-700 hover:border-slate-400 hover:text-slate-900 hover:shadow transition duration-150"
+        >
+          <img
+            className="w-6 h-6"
+            src="https://www.svgrepo.com/show/475656/google-color.svg"
+            loading="lazy"
+            alt="google logo"
+          />
+          <span>使用Google登入</span>
+        </button>
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-gray-100 py-6 flex flex-col justify-center sm:py-12">
-      <div className="relative py-3 sm:max-w-xl sm:mx-auto">
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-light-blue-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
-        <div className="relative px-4 py-10 bg-white shadow-lg sm:rounded-3xl sm:p-20">
-          <h1 className="text-4xl font-bold mb-5 text-center text-gray-800">
-            消費追蹤器
-          </h1>
-          <TransactionInput />
+    <main className="min-h-screen bg-gray-100 py-6 flex flex-col items-center sm:py-12">
+      <div className="w-full max-w-4xl px-4 space-y-8">
+        <div className="flex justify-between items-center">
+          <h1 className="text-4xl font-bold text-gray-800">消費追蹤器</h1>
+          <button
+            onClick={() => signOut(auth)}
+            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-150"
+          >
+            登出
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-white shadow-lg rounded-lg p-6">
+            <TransactionInput userId={user.uid} />
+          </div>
+
+          <div className="bg-white shadow-lg rounded-lg p-6">
+            <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+              月度明細
+            </h2>
+            <input
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="mb-4 p-2 border rounded"
+            />
+            <MonthlyDetails month={selectedMonth} userId={user.uid} />
+          </div>
         </div>
       </div>
     </main>

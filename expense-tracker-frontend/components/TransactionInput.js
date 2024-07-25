@@ -5,8 +5,16 @@ import { useState } from "react";
 import { useMutation, gql } from "@apollo/client";
 
 const ADD_TRANSACTION = gql`
-  mutation AddTransaction($description: String!, $amount: Float!) {
-    addTransaction(description: $description, amount: $amount) {
+  mutation AddTransaction(
+    $description: String!
+    $amount: Float!
+    $userId: String!
+  ) {
+    addTransaction(
+      description: $description
+      amount: $amount
+      userId: $userId
+    ) {
       id
       description
       amount
@@ -15,7 +23,7 @@ const ADD_TRANSACTION = gql`
   }
 `;
 
-export default function TransactionInput() {
+export default function TransactionInput({ userId }) {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [addTransaction] = useMutation(ADD_TRANSACTION);
@@ -26,6 +34,7 @@ export default function TransactionInput() {
       variables: {
         description,
         amount: parseFloat(amount),
+        userId,
       },
     });
     setDescription("");
@@ -33,7 +42,7 @@ export default function TransactionInput() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-lg">
+    <div>
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">新增交易</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -60,20 +69,15 @@ export default function TransactionInput() {
           >
             金額
           </label>
-          <div className="mt-1 relative rounded-md shadow-sm">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-500 sm:text-sm">$</span>
-            </div>
-            <input
-              type="number"
-              id="amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              required
-              className="block w-full pl-7 pr-12 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            />
-          </div>
+          <input
+            type="number"
+            id="amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0.00"
+            required
+            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
         </div>
         <button
           type="submit"

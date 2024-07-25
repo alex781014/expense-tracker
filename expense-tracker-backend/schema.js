@@ -9,9 +9,32 @@ const typeDefs = gql`
     date: String!
   }
 
+  type Transaction {
+    id: ID!
+    amount: Float!
+    description: String!
+    category: String!
+    date: String!
+  }
+
+  type MonthlyReport {
+    transactions: [Transaction!]!
+    totalAmount: Float!
+  }
+
   type Query {
-    hello: String
+    getMonthlyTransactions(month: String!, userId: String!): MonthlyReport!
     getTransactions: [Transaction]
+    hello: String
+  }
+
+  type Mutation {
+    addTransaction(
+      userId: String!
+      amount: Float!
+      description: String!
+      category: String!
+    ): Transaction!
   }
 `;
 
