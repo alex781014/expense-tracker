@@ -10,7 +10,7 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { useApolloClient } from "@apollo/client";
-import { auth } from "../lib/firebase"; // 確保這個路徑是正確的
+import { auth } from "../lib/firebase";
 
 export default function Auth() {
   const [user, setUser] = useState(null);
@@ -30,7 +30,7 @@ export default function Auth() {
     try {
       const result = await signInWithPopup(auth, provider);
       console.log("Sign in successful:", result.user);
-      await client.resetStore(); // 重置 Apollo store
+      await client.resetStore();
       router.refresh();
     } catch (error) {
       console.error("Error signing in with Google", error);

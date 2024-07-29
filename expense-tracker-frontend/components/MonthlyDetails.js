@@ -1,4 +1,3 @@
-// app/components/MonthlyDetails.js
 "use client";
 
 import { useQuery, gql } from "@apollo/client";
@@ -19,8 +18,7 @@ const GET_MONTHLY_TRANSACTIONS = gql`
 `;
 
 export default function MonthlyDetails({ month, userId }) {
-    console.log("MonthlyDetails props:", { month, userId });  
-  const formattedMonth = month.slice(0, 7); // 只取 YYYY-MM 部分
+  const formattedMonth = month.slice(0, 7);
 
   const { loading, error, data } = useQuery(GET_MONTHLY_TRANSACTIONS, {
     variables: { month: formattedMonth, userId },

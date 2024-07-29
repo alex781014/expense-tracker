@@ -15,9 +15,6 @@ const GET_TRANSACTIONS = gql`
 
 function TransactionList() {
   const { loading, error, data } = useQuery(GET_TRANSACTIONS);
-
-  console.log("Query result:", { loading, error, data });
-
   if (loading) return <p>Loading...</p>;
   if (error) {
     console.error("Apollo error:", error);

@@ -1,4 +1,3 @@
-// app/components/MonthlyOverview.js
 "use client";
 
 import { useQuery, gql } from "@apollo/client";
