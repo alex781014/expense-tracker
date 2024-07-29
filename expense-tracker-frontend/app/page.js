@@ -7,14 +7,16 @@ import { auth } from "../lib/firebase";
 import { signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import TransactionInput from "@/components/TransactionInput";
 import MonthlyDetails from "@/components/MonthlyDetails";
-
+import PageLoading from "@/components/pageLoading";
 export default function Home() {
   const [user, loading] = useAuthState(auth);
-const [selectedMonth, setSelectedMonth] = useState(() => {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-});
-
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
+  });
 
   const signInWithGoogle = () => {
     const provider = new GoogleAuthProvider();
@@ -22,7 +24,7 @@ const [selectedMonth, setSelectedMonth] = useState(() => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <PageLoading />;
   }
 
   if (!user) {
