@@ -5,15 +5,7 @@ const typeDefs = gql`
     id: ID!
     amount: Float!
     description: String!
-    category: String!
-    date: String!
-  }
-
-  type Transaction {
-    id: ID!
-    amount: Float!
-    description: String!
-    category: String!
+    category: String
     date: String!
   }
 
@@ -33,7 +25,7 @@ const typeDefs = gql`
       userId: String!
       amount: Float!
       description: String!
-      category: String!
+      category: String
     ): Transaction!
   }
 `;

@@ -1,4 +1,3 @@
-// app/page.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +6,7 @@ import { auth } from "../lib/firebase";
 import { signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import TransactionInput from "@/components/TransactionInput";
 import MonthlyDetails from "@/components/MonthlyDetails";
-import PageLoading from "@/components/pageLoading";
+import PageLoading from "@/components/PageLoading";
 export default function Home() {
   const [user, loading] = useAuthState(auth);
   const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -62,7 +61,10 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-white shadow-lg rounded-lg p-6">
-            <TransactionInput userId={user.uid} />
+            <TransactionInput
+              userId={user.uid}
+              onTransactionAdded={() => refetch()}
+            />
           </div>
 
           <div className="bg-white shadow-lg rounded-lg p-6">

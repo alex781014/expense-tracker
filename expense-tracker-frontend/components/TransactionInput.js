@@ -6,39 +6,87 @@ import { useMutation, gql } from "@apollo/client";
 
 const ADD_TRANSACTION = gql`
   mutation AddTransaction(
-    $description: String!
-    $amount: Float!
     $userId: String!
+    $amount: Float!
+    $description: String!
+    $category: String!
   ) {
     addTransaction(
-      description: $description
-      amount: $amount
       userId: $userId
+      amount: $amount
+      description: $description
+      category: $category
     ) {
       id
-      description
       amount
+      description
+      category
       date
     }
   }
 `;
 
+const GET_MONTHLY_TRANSACTIONS = gql`
+  query GetMonthlyTransactions($month: String!, $userId: String!) {
+    getMonthlyTransactions(month: $month, userId: $userId) {
+      transactions {
+        id
+        description
+        amount
+        category
+        date
+      }
+      totalAmount
+    }
+  }
+`;
+
+const categories = [
+  "娛樂",
+  "教育",
+  "餐飲",
+  "交通",
+  "購物",
+  "醫療",
+  "居家",
+  "其他",
+];
+
 export default function TransactionInput({ userId }) {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
-  const [addTransaction] = useMutation(ADD_TRANSACTION);
+  const [category, setCategory] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    addTransaction({
-      variables: {
-        description,
-        amount: parseFloat(amount),
-        userId,
+  const [addTransaction] = useMutation(ADD_TRANSACTION, {
+    refetchQueries: [
+      {
+        query: GET_MONTHLY_TRANSACTIONS,
+        variables: {
+          month: new Date().toISOString().slice(0, 7),
+          userId,
+        },
       },
-    });
-    setDescription("");
-    setAmount("");
+    ],
+    awaitRefetchQueries: true,
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await addTransaction({
+        variables: {
+          description,
+          amount: parseFloat(amount),
+          category,
+          userId,
+        },
+      });
+      setDescription("");
+      setAmount("");
+      setCategory("");
+    } catch (error) {
+      console.error("Error adding transaction:", error);
+    }
   };
 
   return (
@@ -78,6 +126,28 @@ export default function TransactionInput({ userId }) {
             required
             className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
+        </div>
+        <div>
+          <label
+            htmlFor="category"
+            className="block text-sm font-medium text-gray-700"
+          >
+            分類
+          </label>
+          <select
+            id="category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            required
+            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="">請選擇分類</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
         </div>
         <button
           type="submit"
