@@ -33,7 +33,6 @@ export default function MonthlyDetails({ month, userId }) {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">月度明細</h2>
       {transactions.length === 0 ? (
         <p>本月尚無交易記錄</p>
       ) : (
