@@ -31,8 +31,8 @@ export default function MonthlyDetails({ userId }) {
   const [startDate, setStartDate] = useState(getFirstDayOfMonth());
   const [endDate, setEndDate] = useState(new Date());
   const [viewMode, setViewMode] = useState("detailed");
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // 獲取當月第一天的
   function getFirstDayOfMonth() {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -50,7 +50,6 @@ export default function MonthlyDetails({ userId }) {
     }
   );
 
-  // 當日期改變時重新獲取數據
   useEffect(() => {
     if (userId) {
       refetch({
@@ -67,13 +66,13 @@ export default function MonthlyDetails({ userId }) {
 
   const { transactions, totalAmount } = data.getMonthlyTransactions;
 
-  // 計算類別金額
   const categorySummary = transactions.reduce((acc, transaction) => {
     if (!acc[transaction.category]) {
-      acc[transaction.category] = { total: 0, count: 0 };
+      acc[transaction.category] = { total: 0, count: 0, transactions: [] };
     }
     acc[transaction.category].total += transaction.amount;
     acc[transaction.category].count += 1;
+    acc[transaction.category].transactions.push(transaction);
     return acc;
   }, {});
 
@@ -104,11 +103,62 @@ export default function MonthlyDetails({ userId }) {
             <span className="font-medium">{category}</span>
             <span className="text-sm text-gray-500 ml-2">({count} 筆交易)</span>
           </div>
-          <span className="font-semibold">${total.toFixed(2)}</span>
+          <div>
+            <span className="font-semibold">${total.toFixed(2)}</span>
+            <button
+              onClick={() => {
+                setSelectedCategory(category);
+                setViewMode("categoryDetail");
+              }}
+              className="ml-2 px-2 py-1 bg-blue-500 text-white rounded text-sm"
+            >
+              詳細
+            </button>
+          </div>
         </li>
       ))}
     </ul>
   );
+
+  const renderCategoryDetailView = () => {
+    if (!selectedCategory) return null;
+    const categoryData = categorySummary[selectedCategory];
+    return (
+      <div>
+        <h3 className="text-lg font-semibold mb-2">
+          {selectedCategory}類別明細
+        </h3>
+
+        <ul className="space-y-2">
+          {categoryData.transactions.map(
+            ({ id, description, amount, date }) => (
+              <li key={id} className="flex justify-between items-center">
+                <div>
+                  <span className="font-medium">{description}</span>
+                </div>
+                <div>
+                  <span className="font-semibold">${amount.toFixed(2)}</span>
+                  <span className="text-sm text-gray-500 ml-2">
+                    {new Date(date).toLocaleDateString()}
+                  </span>
+                </div>
+              </li>
+            )
+          )}
+        </ul>
+        <p className="my-2 text-center font-bold">
+          {selectedCategory}消費總計: ${categoryData.total.toFixed(2)} (
+          {categoryData.count} 筆交易)
+        </p>
+        <button
+          onClick={() => setViewMode("categorized")}
+          className="mt-4 px-4 py-2 bg-gray-200 rounded"
+        >
+          返回分類明細
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div>
@@ -164,11 +214,13 @@ export default function MonthlyDetails({ userId }) {
         <p>該時間段內尚無交易記錄</p>
       ) : (
         <>
-          {viewMode === "detailed"
-            ? renderDetailedView()
-            : renderCategorizedView()}
+          {viewMode === "detailed" && renderDetailedView()}
+          {viewMode === "categorized" && renderCategorizedView()}
+          {viewMode === "categoryDetail" && renderCategoryDetailView()}
           <div className="mt-4 text-right">
-            <span className="font-bold">總計: ${totalAmount.toFixed(2)}</span>
+            <span className="font-bold">
+              消費總計為: ${totalAmount.toFixed(2)}
+            </span>
           </div>
         </>
       )}
