@@ -2,9 +2,6 @@ const admin = require("firebase-admin");
 
 const resolvers = {
   Query: {
-    hello: () => {
-      return "Hello, World!";
-    },
     getTransactions: async (_, __, context) => {
       if (!context.user) {
         throw new Error("You must be logged in");
@@ -17,67 +14,89 @@ const resolvers = {
         ...doc.data(),
       }));
     },
-    getMonthlyTransactions: async (_, { month, userId }) => {
-      const [year, monthNum] = month.split("-").map(Number);
-
-      const startOfMonth = admin.firestore.Timestamp.fromDate(
-        new Date(year, monthNum - 1, 1)
-      );
-      const endOfMonth = admin.firestore.Timestamp.fromDate(
-        new Date(year, monthNum, 0, 23, 59, 59, 999)
-      );
+    getMonthlyTransactions: async (_, { startDate, endDate, userId }) => {
       try {
+        if (!startDate) {
+          const now = new Date();
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1)
+            .toISOString()
+            .split("T")[0];
+        }
+
+        const startTimestamp = admin.firestore.Timestamp.fromDate(
+          new Date(startDate)
+        );
+        const endTimestamp = admin.firestore.Timestamp.fromDate(
+          new Date(endDate)
+        );
+
         const snapshot = await admin
           .firestore()
           .collection("transactions")
           .where("userId", "==", userId)
-          .where("date", ">=", startOfMonth)
-          .where("date", "<=", endOfMonth)
+          .where("date", ">=", startTimestamp)
+          .where("date", "<=", endTimestamp)
+          .orderBy("date", "asc")
           .get();
 
-        const transactions = snapshot.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            date: data.date.toDate().toISOString(),
-          };
-        });
+        const transactions = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().date.toDate().toISOString(),
+        }));
+
+        const totalAmount = transactions.reduce(
+          (sum, transaction) => sum + transaction.amount,
+          0
+        );
 
         return {
           transactions,
-          totalAmount: transactions.reduce((sum, t) => sum + t.amount, 0),
+          totalAmount,
         };
       } catch (error) {
         console.error("Error fetching transactions:", error);
-        return { transactions: [], totalAmount: 0 };
+        throw new Error("Failed to fetch transactions");
       }
     },
   },
   Mutation: {
     addTransaction: async (_, { userId, amount, description, category }) => {
-      const transactionData = {
-        userId,
-        amount,
-        description,
-        category: category || null,
-        date: admin.firestore.Timestamp.now(),
-      };
-
       try {
+        const newTransaction = {
+          userId,
+          amount,
+          description,
+          category,
+          date: admin.firestore.Timestamp.now(),
+        };
+
+        // 檢查是否已存在相同的交易
+        const existingTransactions = await admin
+          .firestore()
+          .collection("transactions")
+          .where("userId", "==", userId)
+          .where("amount", "==", amount)
+          .where("description", "==", description)
+          .where("date", "==", newTransaction.date)
+          .get();
+
+        if (!existingTransactions.empty) {
+          throw new Error("A similar transaction already exists");
+        }
+
         const docRef = await admin
           .firestore()
           .collection("transactions")
-          .add(transactionData);
-
+          .add(newTransaction);
         return {
           id: docRef.id,
-          ...transactionData,
-          date: transactionData.date.toDate().toISOString(),
+          ...newTransaction,
+          date: newTransaction.date.toDate().toISOString(),
         };
       } catch (error) {
         console.error("Error adding transaction:", error);
-        throw new Error("Failed to add transaction");
+        throw new Error(error.message || "Failed to add transaction");
       }
     },
   },

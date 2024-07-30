@@ -68,15 +68,6 @@ export default function Home() {
           </div>
 
           <div className="bg-white shadow-lg rounded-lg p-6">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-              月度明細
-            </h2>
-            <input
-              type="month"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="mb-4 p-2 border rounded"
-            />
             <MonthlyDetails month={selectedMonth} userId={user.uid} />
           </div>
         </div>

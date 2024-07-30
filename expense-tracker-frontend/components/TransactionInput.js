@@ -1,4 +1,3 @@
-// app/components/TransactionInput.js
 "use client";
 
 import { useState } from "react";

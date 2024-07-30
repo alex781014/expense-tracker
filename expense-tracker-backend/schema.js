@@ -9,15 +9,18 @@ const typeDefs = gql`
     date: String!
   }
 
-  type MonthlyReport {
+  type MonthlyReportResult {
     transactions: [Transaction!]!
     totalAmount: Float!
   }
 
   type Query {
-    getMonthlyTransactions(month: String!, userId: String!): MonthlyReport!
+    getMonthlyTransactions(
+      startDate: String
+      endDate: String!
+      userId: String!
+    ): MonthlyReportResult!
     getTransactions: [Transaction]
-    hello: String
   }
 
   type Mutation {
