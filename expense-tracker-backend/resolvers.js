@@ -62,7 +62,30 @@ const resolvers = {
   },
   Mutation: {
     addTransaction: async (_, { userId, amount, description, category }) => {
+      console.log("Received transaction data:", {
+        userId,
+        amount,
+        description,
+        category,
+      });
+
       try {
+        // 驗證輸入數據
+        if (
+          !userId ||
+          typeof amount !== "number" ||
+          !description ||
+          !category
+        ) {
+          console.error("Invalid input data:", {
+            userId,
+            amount,
+            description,
+            category,
+          });
+          throw new Error("Invalid input data");
+        }
+
         const newTransaction = {
           userId,
           amount,
@@ -70,6 +93,8 @@ const resolvers = {
           category,
           date: admin.firestore.Timestamp.now(),
         };
+
+        console.log("Attempting to check for existing transactions");
 
         // 檢查是否已存在相同的交易
         const existingTransactions = await admin
@@ -82,21 +107,29 @@ const resolvers = {
           .get();
 
         if (!existingTransactions.empty) {
+          console.log("Similar transaction found, throwing error");
           throw new Error("A similar transaction already exists");
         }
+
+        console.log(
+          "No similar transaction found, attempting to add new transaction"
+        );
 
         const docRef = await admin
           .firestore()
           .collection("transactions")
           .add(newTransaction);
+
+        console.log("Transaction added successfully. Document ID:", docRef.id);
+
         return {
           id: docRef.id,
           ...newTransaction,
           date: newTransaction.date.toDate().toISOString(),
         };
       } catch (error) {
-        console.error("Error adding transaction:", error);
-        throw new Error(error.message || "Failed to add transaction");
+        console.error("Error in addTransaction resolver:", error);
+        throw new Error(`Failed to add transaction: ${error.message}`);
       }
     },
   },

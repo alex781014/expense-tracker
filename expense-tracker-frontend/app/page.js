@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../lib/firebase";
 import { signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
 import TransactionInput from "@/components/TransactionInput";
 import MonthlyDetails from "@/components/MonthlyDetails";
 import PageLoading from "@/components/PageLoading";
+
 export default function Home() {
   const [user, loading] = useAuthState(auth);
   const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -16,6 +17,12 @@ export default function Home() {
       "0"
     )}`;
   });
+
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshKey((prevKey) => prevKey + 1);
+  }, []);
 
   const signInWithGoogle = () => {
     const provider = new GoogleAuthProvider();
@@ -63,12 +70,17 @@ export default function Home() {
           <div className="bg-white shadow-lg rounded-lg p-6">
             <TransactionInput
               userId={user.uid}
-              onTransactionAdded={() => refetch()}
+              onTransactionAdded={handleRefresh}
             />
           </div>
 
           <div className="bg-white shadow-lg rounded-lg p-6">
-            <MonthlyDetails month={selectedMonth} userId={user.uid} />
+            <MonthlyDetails
+              month={selectedMonth}
+              userId={user.uid}
+              refreshTrigger={refreshKey}
+              onRefresh={handleRefresh}
+            />
           </div>
         </div>
       </div>

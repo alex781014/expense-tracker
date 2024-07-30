@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, gql } from "@apollo/client";
+import { useMutation, gql, useApolloClient } from "@apollo/client";
 
 const ADD_TRANSACTION = gql`
   mutation AddTransaction(
@@ -26,8 +26,16 @@ const ADD_TRANSACTION = gql`
 `;
 
 const GET_MONTHLY_TRANSACTIONS = gql`
-  query GetMonthlyTransactions($month: String!, $userId: String!) {
-    getMonthlyTransactions(month: $month, userId: $userId) {
+  query GetMonthlyTransactions(
+    $startDate: String!
+    $endDate: String!
+    $userId: String!
+  ) {
+    getMonthlyTransactions(
+      startDate: $startDate
+      endDate: $endDate
+      userId: $userId
+    ) {
       transactions {
         id
         description
@@ -55,43 +63,100 @@ export default function TransactionInput({ userId }) {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
+  const client = useApolloClient();
 
   const [addTransaction] = useMutation(ADD_TRANSACTION, {
-    refetchQueries: [
-      {
+    update(cache, { data: { addTransaction } }) {
+      const today = new Date();
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+      const { getMonthlyTransactions } = cache.readQuery({
         query: GET_MONTHLY_TRANSACTIONS,
         variables: {
-          month: new Date().toISOString().slice(0, 7),
+          startDate: startOfMonth.toISOString().split("T")[0],
+          endDate: endOfMonth.toISOString().split("T")[0],
           userId,
         },
-      },
-    ],
-    awaitRefetchQueries: true,
+      }) || { getMonthlyTransactions: { transactions: [], totalAmount: 0 } };
+
+      const updatedTransactions = [
+        ...getMonthlyTransactions.transactions,
+        addTransaction,
+      ];
+      const updatedTotalAmount =
+        getMonthlyTransactions.totalAmount + addTransaction.amount;
+
+      cache.writeQuery({
+        query: GET_MONTHLY_TRANSACTIONS,
+        variables: {
+          startDate: startOfMonth.toISOString().split("T")[0],
+          endDate: endOfMonth.toISOString().split("T")[0],
+          userId,
+        },
+        data: {
+          getMonthlyTransactions: {
+            transactions: updatedTransactions,
+            totalAmount: updatedTotalAmount,
+          },
+        },
+      });
+    },
+    onCompleted: (data) => {
+      console.log("Transaction added successfully:", data);
+      setDescription("");
+      setAmount("");
+      setCategory("");
+    },
+    onError: (error) => {
+      console.error("Error in mutation:", error);
+      alert(`添加交易失敗: ${error.message}`);
+    },
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await addTransaction({
+      console.log("Submitting transaction:", {
+        userId,
+        amount: parseFloat(amount),
+        description,
+        category,
+      });
+      const result = await addTransaction({
         variables: {
-          description,
+          userId,
           amount: parseFloat(amount),
+          description,
           category,
+        },
+      });
+      console.log("Mutation result:", result);
+
+      // 強制重新獲取當月交易數據
+      const today = new Date();
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+      await client.refetchQueries({
+        include: [GET_MONTHLY_TRANSACTIONS],
+        variables: {
+          startDate: startOfMonth.toISOString().split("T")[0],
+          endDate: endOfMonth.toISOString().split("T")[0],
           userId,
         },
       });
-      setDescription("");
-      setAmount("");
-      setCategory("");
     } catch (error) {
-      console.error("Error adding transaction:", error);
+      console.error("Error in handleSubmit:", error);
     }
   };
 
+  // 返回的 JSX 保持不變
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">新增交易</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* 表單字段保持不變 */}
         <div>
           <label
             htmlFor="description"

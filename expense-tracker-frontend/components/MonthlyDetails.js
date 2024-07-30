@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, gql } from "@apollo/client";
 import DatePicker from "./DatePicker";
 
@@ -27,7 +27,7 @@ const GET_TRANSACTIONS_BY_DATE_RANGE = gql`
   }
 `;
 
-export default function MonthlyDetails({ userId }) {
+export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
   const [startDate, setStartDate] = useState(getFirstDayOfMonth());
   const [endDate, setEndDate] = useState(new Date());
   const [viewMode, setViewMode] = useState("detailed");
@@ -38,27 +38,37 @@ export default function MonthlyDetails({ userId }) {
     return new Date(now.getFullYear(), now.getMonth(), 1);
   }
 
+  const formatDate = (date) => {
+    return date.toISOString().split("T")[0];
+  };
+
   const { loading, error, data, refetch } = useQuery(
     GET_TRANSACTIONS_BY_DATE_RANGE,
     {
       variables: {
-        startDate: startDate.toISOString().split("T")[0],
-        endDate: endDate.toISOString().split("T")[0],
+        startDate: formatDate(startDate),
+        endDate: formatDate(new Date(endDate.getTime() + 86400000)), // Add one day to include the end date
         userId,
       },
       skip: !userId,
+      fetchPolicy: "network-only", // This ensures we always fetch from the network
     }
   );
+
+  const handleDateChange = useCallback((start, end) => {
+    setStartDate(start);
+    setEndDate(end);
+  }, []);
 
   useEffect(() => {
     if (userId) {
       refetch({
-        startDate: startDate.toISOString().split("T")[0],
-        endDate: endDate.toISOString().split("T")[0],
+        startDate: formatDate(startDate),
+        endDate: formatDate(new Date(endDate.getTime() + 86400000)),
         userId,
       });
     }
-  }, [startDate, endDate, userId, refetch]);
+  }, [startDate, endDate, userId, refetch, refreshTrigger]);
 
   if (!userId) return <p>等待用戶資訊...</p>;
   if (loading) return <p>Loading...</p>;
@@ -170,7 +180,7 @@ export default function MonthlyDetails({ userId }) {
           </label>
           <DatePicker
             selectedDate={startDate}
-            onChange={(date) => setStartDate(date)}
+            onChange={(date) => handleDateChange(date, endDate)}
             selectsStart
             startDate={startDate}
             endDate={endDate}
@@ -182,11 +192,12 @@ export default function MonthlyDetails({ userId }) {
           </label>
           <DatePicker
             selectedDate={endDate}
-            onChange={(date) => setEndDate(date)}
+            onChange={(date) => handleDateChange(startDate, date)}
             selectsEnd
             startDate={startDate}
             endDate={endDate}
             minDate={startDate}
+            maxDate={new Date()}
           />
         </div>
       </div>
