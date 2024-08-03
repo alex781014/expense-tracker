@@ -59,7 +59,7 @@ const categories = [
   "其他",
 ];
 
-export default function TransactionInput({ userId }) {
+export default function TransactionInput({ userId, onTransactionAdded }) {
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
@@ -107,6 +107,7 @@ export default function TransactionInput({ userId }) {
       setDescription("");
       setAmount("");
       setCategory("");
+      onTransactionAdded();
     },
     onError: (error) => {
       console.error("Error in mutation:", error);
