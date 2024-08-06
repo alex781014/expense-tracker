@@ -79,6 +79,7 @@ export default function Home() {
               month={selectedMonth}
               userId={user.uid}
               refreshTrigger={refreshKey}
+              onRefresh={handleRefresh}
             />
           </div>
         </div>
