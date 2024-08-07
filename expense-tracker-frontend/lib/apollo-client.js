@@ -4,7 +4,7 @@ import { setContext } from "@apollo/client/link/context";
 import { getAuth, getIdToken } from "firebase/auth";
 
 const httpLink = createHttpLink({
-  uri: "http://localhost:4005/graphql",
+  uri: "https://expense-tracker-backend-frtr3vsb6q-de.a.run.app",
 });
 
 const authLink = setContext(async (_, { headers }) => {

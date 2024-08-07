@@ -5,12 +5,18 @@ const resolvers = require("./resolvers");
 const admin = require("firebase-admin");
 const cors = require("cors");
 require("dotenv").config();
-var serviceAccount = require("./expense-tracker-445d0-firebase-adminsdk-8vlqn-b8e5b36017.json");
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:3000', 'https://expense-tracker-cc7b.vercel.app/'],
+  credentials: true
+}));
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+  }),
 });
 const server = new ApolloServer({
   typeDefs,
@@ -37,13 +43,11 @@ const server = new ApolloServer({
 
 async function startServer() {
   await server.start();
-  server.applyMiddleware({ app });
+  server.applyMiddleware({ app, path: '/' });
 
-  const PORT = process.env.PORT;
-  app.listen(PORT, () => {
-    console.log(
-      `Server running on http://localhost:${PORT}${server.graphqlPath}`
-    );
+  const PORT = process.env.PORT || 8080;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
   });
 }
 
