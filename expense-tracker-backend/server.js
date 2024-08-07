@@ -7,7 +7,9 @@ const cors = require("cors");
 require("dotenv").config();
 const app = express();
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://expense-tracker-cc7b.vercel.app/'],
+  origin: ['https://expense-tracker-cc7b.vercel.app', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
@@ -39,11 +41,12 @@ const server = new ApolloServer({
   },
   playground: true,
   introspection: true,
+  cors: false
 });
 
 async function startServer() {
   await server.start();
-  server.applyMiddleware({ app, path: '/' });
+  server.applyMiddleware({ app, path: '/', cors: false });
 
   const PORT = process.env.PORT || 8080;
   app.listen(PORT, '0.0.0.0', () => {
