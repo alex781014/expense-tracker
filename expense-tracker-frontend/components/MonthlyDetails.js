@@ -217,7 +217,7 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
           {viewMode === "categorized" && renderCategorizedView()}
           {viewMode === "categoryDetail" && renderCategoryDetailView()}
           <div className="mt-4 text-right">
-            <span className="font-bold">
+            <span className="font-bold text-gray-500">
               消費總計為: ${totalAmount.toFixed(2)}
             </span>
           </div>
