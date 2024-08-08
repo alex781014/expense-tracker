@@ -85,7 +85,7 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
             <span className="text-sm text-gray-500 ml-2">({category})</span>
           </div>
           <div>
-            <span className="font-semibold">${amount.toFixed(2)}</span>
+            <span className="font-semibold text-gray-500">${amount.toFixed(2)}</span>
             <span className="text-sm text-gray-500 ml-2">
               {new Date(date).toLocaleDateString()}
             </span>
@@ -100,11 +100,11 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
       {Object.entries(categorySummary).map(([category, { total, count }]) => (
         <li key={category} className="flex justify-between items-center">
           <div>
-            <span className="font-medium">{category}</span>
+            <span className="font-medium text-gray-500">{category}</span>
             <span className="text-sm text-gray-500 ml-2">({count} 筆交易)</span>
           </div>
           <div>
-            <span className="font-semibold">${total.toFixed(2)}</span>
+            <span className="font-semibold text-gray-500">${total.toFixed(2)}</span>
             <button
               onClick={() => {
                 setSelectedCategory(category);
@@ -134,10 +134,10 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
             ({ id, description, amount, date }) => (
               <li key={id} className="flex justify-between items-center">
                 <div>
-                  <span className="font-medium">{description}</span>
+                  <span className="font-medium text-gray-500">{description}</span>
                 </div>
                 <div>
-                  <span className="font-semibold">${amount.toFixed(2)}</span>
+                  <span className="font-semibold text-gray-500">${amount.toFixed(2)}</span>
                   <span className="text-sm text-gray-500 ml-2">
                     {new Date(date).toLocaleDateString()}
                   </span>
@@ -146,7 +146,7 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
             )
           )}
         </ul>
-        <p className="my-2 text-center font-bold">
+        <p className="my-2 text-center font-bold text-gray-500">
           {selectedCategory}消費總計: ${categoryData.total.toFixed(2)} (
           {categoryData.count} 筆交易)
         </p>
