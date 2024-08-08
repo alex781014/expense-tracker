@@ -91,7 +91,7 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
       {transactions.map(({ id, description, amount, category, date }) => (
         <li key={id} className="flex justify-between items-center">
           <div>
-            <span className="font-medium">{description}</span>
+            <span className="font-medium text-gray-500">{description}</span>
             <span className="text-sm text-gray-500 ml-2">({category})</span>
           </div>
           <div>
@@ -204,19 +204,17 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
       <div className="mb-4">
         <button
           onClick={() => setViewMode("detailed")}
-          className={`mr-2 px-4 py-2 rounded ${
-            viewMode === "detailed" ? "bg-blue-500 text-white" : "bg-gray-200"
-          }`}
+          className={`mr-2 px-4 py-2 rounded ${viewMode === "detailed" ? "bg-blue-500 text-white" : "bg-gray-200"
+            }`}
         >
           詳細明細
         </button>
         <button
           onClick={() => setViewMode("categorized")}
-          className={`px-4 py-2 rounded ${
-            viewMode === "categorized"
+          className={`px-4 py-2 rounded ${viewMode === "categorized"
               ? "bg-blue-500 text-white"
               : "bg-gray-200"
-          }`}
+            }`}
         >
           分類明細
         </button>
