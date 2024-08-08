@@ -5,7 +5,7 @@ import { useMutation, gql, useApolloClient } from "@apollo/client";
 
 const ADD_TRANSACTION = gql`
   mutation AddTransaction(
-    $userId: String!
+    $userId: ID!
     $amount: Float!
     $description: String!
     $category: String!
@@ -25,17 +25,9 @@ const ADD_TRANSACTION = gql`
   }
 `;
 
-const GET_MONTHLY_TRANSACTIONS = gql`
-  query GetMonthlyTransactions(
-    $startDate: String!
-    $endDate: String!
-    $userId: String!
-  ) {
-    getMonthlyTransactions(
-      startDate: $startDate
-      endDate: $endDate
-      userId: $userId
-    ) {
+const GET_USER_TRANSACTIONS = gql`
+  query GetUserTransactions($userId: ID!, $startDate: String!, $endDate: String!) {
+    getUserTransactions(userId: $userId, startDate: $startDate, endDate: $endDate) {
       transactions {
         id
         description
@@ -71,31 +63,31 @@ export default function TransactionInput({ userId, onTransactionAdded }) {
       const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
       const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-      const { getMonthlyTransactions } = cache.readQuery({
-        query: GET_MONTHLY_TRANSACTIONS,
+      const { getUserTransactions } = cache.readQuery({
+        query: GET_USER_TRANSACTIONS,
         variables: {
+          userId,
           startDate: startOfMonth.toISOString().split("T")[0],
           endDate: endOfMonth.toISOString().split("T")[0],
-          userId,
         },
-      }) || { getMonthlyTransactions: { transactions: [], totalAmount: 0 } };
+      }) || { getUserTransactions: { transactions: [], totalAmount: 0 } };
 
       const updatedTransactions = [
-        ...getMonthlyTransactions.transactions,
+        ...getUserTransactions.transactions,
         addTransaction,
       ];
       const updatedTotalAmount =
-        getMonthlyTransactions.totalAmount + addTransaction.amount;
+        getUserTransactions.totalAmount + addTransaction.amount;
 
       cache.writeQuery({
-        query: GET_MONTHLY_TRANSACTIONS,
+        query: GET_USER_TRANSACTIONS,
         variables: {
+          userId,
           startDate: startOfMonth.toISOString().split("T")[0],
           endDate: endOfMonth.toISOString().split("T")[0],
-          userId,
         },
         data: {
-          getMonthlyTransactions: {
+          getUserTransactions: {
             transactions: updatedTransactions,
             totalAmount: updatedTotalAmount,
           },
@@ -134,25 +126,31 @@ export default function TransactionInput({ userId, onTransactionAdded }) {
       });
       console.log("Mutation result:", result);
 
-      // 強制重新獲取當月交易數據
+
       const today = new Date();
       const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
       const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
       await client.refetchQueries({
-        include: [GET_MONTHLY_TRANSACTIONS],
+        include: [GET_USER_TRANSACTIONS],
         variables: {
+          userId,
           startDate: startOfMonth.toISOString().split("T")[0],
           endDate: endOfMonth.toISOString().split("T")[0],
-          userId,
         },
       });
     } catch (error) {
       console.error("Error in handleSubmit:", error);
+      if (error.message.includes("User not found")) {
+        alert("用戶不存在，請先創建用戶帳戶。");
+        // 可能需要導航到用戶創建頁面或觸發用戶創建流程
+      } else {
+        alert(`添加交易失敗: ${error.message}`);
+      }
     }
   };
 
-  // 返回的 JSX 保持不變
+
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">新增交易</h2>

@@ -1,6 +1,12 @@
 const { gql } = require("apollo-server-express");
 
 const typeDefs = gql`
+  type User {
+    id: ID!
+    name: String!
+    email: String!
+  }
+
   type Transaction {
     id: ID!
     amount: Float!
@@ -15,17 +21,14 @@ const typeDefs = gql`
   }
 
   type Query {
-    getMonthlyTransactions(
-      startDate: String
-      endDate: String!
-      userId: String!
-    ): MonthlyReportResult!
-    getTransactions: [Transaction]
+    getUser(id: ID!): User
+    getUserTransactions(userId: ID!, startDate: String, endDate: String): MonthlyReportResult!
   }
 
   type Mutation {
+    createUser(id: ID!, name: String!, email: String!): User!
     addTransaction(
-      userId: String!
+      userId: ID!
       amount: Float!
       description: String!
       category: String

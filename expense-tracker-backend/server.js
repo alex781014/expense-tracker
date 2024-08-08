@@ -7,7 +7,7 @@ const cors = require("cors");
 require("dotenv").config();
 const app = express();
 app.use(cors({
-  origin: ['https://expense-tracker-cc7b.vercel.app', 'http://localhost:3000'],
+  origin: ['https://expense-tracker-cc7b.vercel.app', 'http://localhost:3000', 'https://studio.apollographql.com'],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true

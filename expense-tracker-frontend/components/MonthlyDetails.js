@@ -3,18 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, gql } from "@apollo/client";
 import DatePicker from "./DatePicker";
+import { formatISO } from 'date-fns';
 
-const GET_TRANSACTIONS_BY_DATE_RANGE = gql`
-  query GetTransactionsByDateRange(
-    $startDate: String!
-    $endDate: String!
-    $userId: String!
-  ) {
-    getMonthlyTransactions(
-      startDate: $startDate
-      endDate: $endDate
-      userId: $userId
-    ) {
+const GET_USER_TRANSACTIONS = gql`
+  query GetUserTransactions($userId: ID!, $startDate: String!, $endDate: String!) {
+    getUserTransactions(userId: $userId, startDate: $startDate, endDate: $endDate) {
       transactions {
         id
         description
@@ -39,21 +32,18 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
   }
 
   const formatDate = (date) => {
-    return date.toISOString().split("T")[0];
+    return formatISO(date, { representation: 'date' });
   };
 
-  const { loading, error, data, refetch } = useQuery(
-    GET_TRANSACTIONS_BY_DATE_RANGE,
-    {
-      variables: {
-        startDate: formatDate(startDate),
-        endDate: formatDate(new Date(endDate.getTime() + 86400000)), // Add one day to include the end date
-        userId,
-      },
-      skip: !userId,
-      fetchPolicy: "network-only", // This ensures we always fetch from the network
-    }
-  );
+  const { loading, error, data, refetch } = useQuery(GET_USER_TRANSACTIONS, {
+    variables: {
+      userId,
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate),
+    },
+    skip: !userId,
+    fetchPolicy: "network-only",
+  });
 
   const handleDateChange = useCallback((start, end) => {
     setStartDate(start);
@@ -63,9 +53,9 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
   useEffect(() => {
     if (userId) {
       refetch({
-        startDate: formatDate(startDate),
-        endDate: formatDate(new Date(endDate.getTime() + 86400000)),
         userId,
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
       });
     }
   }, [startDate, endDate, userId, refetch, refreshTrigger]);
@@ -74,7 +64,7 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
-  const { transactions, totalAmount } = data.getMonthlyTransactions;
+  const { transactions, totalAmount } = data.getUserTransactions;
 
   const categorySummary = transactions.reduce((acc, transaction) => {
     if (!acc[transaction.category]) {
@@ -212,8 +202,8 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
         <button
           onClick={() => setViewMode("categorized")}
           className={`px-4 py-2 rounded ${viewMode === "categorized"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200"
+            ? "bg-blue-500 text-white"
+            : "bg-gray-200"
             }`}
         >
           分類明細
