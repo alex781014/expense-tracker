@@ -4,7 +4,9 @@ const typeDefs = require("./schema");
 const resolvers = require("./resolvers");
 const admin = require("firebase-admin");
 const cors = require("cors");
+const { OAuth2Client } = require('google-auth-library');
 require("dotenv").config();
+
 const app = express();
 app.use(cors({
   origin: ['https://expense-tracker-cc7b.vercel.app', 'http://localhost:3000', 'https://studio.apollographql.com'],
@@ -20,6 +22,22 @@ admin.initializeApp({
     privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
   }),
 });
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+async function verifyGoogleToken(token) {
+  try {
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    return ticket.getPayload();
+  } catch (error) {
+    console.error('Error verifying Google token:', error);
+    return null;
+  }
+}
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -33,9 +51,17 @@ const server = new ApolloServer({
     const idToken = authHeader.split("Bearer ")[1];
 
     try {
+      // 首先嘗試驗證 Google token
+      const googleUser = await verifyGoogleToken(idToken);
+      if (googleUser) {
+        return { user: googleUser };
+      }
+
+      // 如果 Google 驗證失敗，嘗試 Firebase 驗證
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       return { user: decodedToken };
     } catch (error) {
+      console.error('Authentication error:', error);
       return { user: null };
     }
   },

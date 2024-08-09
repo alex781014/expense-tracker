@@ -1,61 +1,35 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "../lib/firebase";
-import { signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
+import { useState, useCallback } from "react";
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
 import TransactionInput from "@/components/TransactionInput";
 import MonthlyDetails from "@/components/MonthlyDetails";
 import PageLoading from "@/components/PageLoading";
-import { useMutation, gql } from "@apollo/client";
-import Image from "next/image";
-
-const CREATE_USER = gql`
-  mutation CreateUser($id: ID!, $name: String!, $email: String!) {
-    createUser(id: $id, name: $name, email: $email) {
-      id
-      name
-      email
-    }
-  }
-`;
 
 export default function Home() {
-  const [user, loading] = useAuthState(auth);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
 
   const [refreshKey, setRefreshKey] = useState(0);
-  const [createUser] = useMutation(CREATE_USER);
 
   const handleRefresh = useCallback(() => {
     setRefreshKey((prevKey) => prevKey + 1);
   }, []);
 
-  const signInWithGoogle = () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider);
+  const handleGoogleLoginSuccess = (credentialResponse) => {
+    const decoded = jwtDecode(credentialResponse.credential);
+    console.log(decoded)
+    setUser({
+      uid: decoded.sub,
+      email: decoded.email,
+      displayName: decoded.name
+    });
   };
-
-  useEffect(() => {
-    if (user) {
-      createUser({
-        variables: {
-          id: user.uid,
-          name: user.displayName || "Unknown User",
-          email: user.email || "noemail@example.com",
-        },
-      })
-        .then(() => {
-          console.log("User created or updated successfully");
-        })
-        .catch((error) => {
-          console.error("Error creating/updating user:", error);
-        });
-    }
-  }, [user, createUser]);
 
   if (loading) {
     return <PageLoading />;
@@ -63,23 +37,15 @@ export default function Home() {
 
   if (!user) {
     return (
-      <main className="min-h-screen bg-gray-100 flex flex-col justify-center items-center">
-        <h1 className="text-4xl font-bold mb-5 text-gray-800">消費追蹤器</h1>
-        <button
-          onClick={signInWithGoogle}
-          className="px-4 py-2 border flex gap-2 border-slate-200 rounded-lg text-slate-700 hover:border-slate-400 hover:text-slate-900 hover:shadow transition duration-150"
-        >
-          <Image
-            className="w-6 h-6"
-            src="https://www.svgrepo.com/show/475656/google-color.svg"
-            loading="lazy"
-            alt="google logo"
-            width={50}
-            height={50}
+      <GoogleOAuthProvider clientId={"553025802653-hk87jcvja9bt4mtreh6am4gh04j4g1he.apps.googleusercontent.com"}>
+        <main className="min-h-screen bg-gray-100 flex flex-col justify-center items-center">
+          <h1 className="text-4xl font-bold mb-5 text-gray-800">消費追蹤器</h1>
+          <GoogleLogin
+            onSuccess={handleGoogleLoginSuccess}
+            onError={() => console.log('Login Failed')}
           />
-          <span>使用Google登入</span>
-        </button>
-      </main>
+        </main>
+      </GoogleOAuthProvider>
     );
   }
 
@@ -89,7 +55,7 @@ export default function Home() {
         <div className="flex justify-between items-center">
           <h1 className="text-4xl font-bold text-gray-800">消費追蹤器</h1>
           <button
-            onClick={() => signOut(auth)}
+            onClick={() => setUser(null)}
             className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-150"
           >
             登出
@@ -109,7 +75,6 @@ export default function Home() {
               month={selectedMonth}
               userId={user.uid}
               refreshTrigger={refreshKey}
-              onRefresh={handleRefresh}
             />
           </div>
         </div>

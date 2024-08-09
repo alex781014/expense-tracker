@@ -125,7 +125,7 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
     const categoryData = categorySummary[selectedCategory];
     return (
       <div>
-        <h3 className="text-lg font-semibold mb-2">
+        <h3 className="text-lg font-semibold mb-2 text-gray-500">
           {selectedCategory}類別明細
         </h3>
 

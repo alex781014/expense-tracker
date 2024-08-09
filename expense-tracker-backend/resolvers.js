@@ -2,14 +2,22 @@ const admin = require("firebase-admin");
 
 const resolvers = {
   Query: {
-    getUser: async (_, { id }) => {
-      const userDoc = await admin.firestore().collection("users").doc(id).get();
+    getUser: async (_, __, context) => {
+      if (!context.user) {
+        throw new Error("Authentication required");
+      }
+      const userId = context.user.sub;
+      const userDoc = await admin.firestore().collection("users").doc(userId).get();
       if (!userDoc.exists) {
         throw new Error("User not found");
       }
       return { id: userDoc.id, ...userDoc.data() };
     },
-    getUserTransactions: async (_, { userId, startDate, endDate }) => {
+    getUserTransactions: async (_, { startDate, endDate }, context) => {
+      if (!context.user) {
+        throw new Error("Authentication required");
+      }
+      const userId = context.user.sub;
       try {
         const startTimestamp = admin.firestore.Timestamp.fromDate(new Date(startDate));
         const endTimestamp = admin.firestore.Timestamp.fromDate(new Date(endDate + 'T23:59:59.999Z'));
@@ -46,7 +54,11 @@ const resolvers = {
     },
   },
   Mutation: {
-    createUser: async (_, { id, name, email }) => {
+    createUser: async (_, __, context) => {
+      if (!context.user) {
+        throw new Error("Authentication required");
+      }
+      const { sub: id, name, email } = context.user;
       try {
         const userRef = admin.firestore().collection("users").doc(id);
         const userDoc = await userRef.get();
@@ -64,7 +76,11 @@ const resolvers = {
         throw new Error(`Failed to create user: ${error.message}`);
       }
     },
-    addTransaction: async (_, { userId, amount, description, category }) => {
+    addTransaction: async (_, { amount, description, category }, context) => {
+      if (!context.user) {
+        throw new Error("Authentication required");
+      }
+      const userId = context.user.sub;
       try {
         const userRef = admin.firestore().collection("users").doc(userId);
         const userDoc = await userRef.get();
