@@ -3,36 +3,70 @@
 import { useState, useCallback } from "react";
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
+import { useMutation, gql } from "@apollo/client";
 import TransactionInput from "@/components/TransactionInput";
 import MonthlyDetails from "@/components/MonthlyDetails";
 import PageLoading from "@/components/PageLoading";
 
+const CREATE_USER = gql`
+  mutation CreateUser($id: ID!, $name: String!, $email: String!) {
+    createUser(id: $id, name: $name, email: $email) {
+      id
+      name
+      email
+    }
+  }
+`;
+
 export default function Home() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-  });
+  const [error, setError] = useState(null);
 
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const [createUser] = useMutation(CREATE_USER);
 
   const handleRefresh = useCallback(() => {
     setRefreshKey((prevKey) => prevKey + 1);
   }, []);
 
-  const handleGoogleLoginSuccess = (credentialResponse) => {
-    const decoded = jwtDecode(credentialResponse.credential);
-    console.log(decoded)
-    setUser({
-      uid: decoded.sub,
-      email: decoded.email,
-      displayName: decoded.name
-    });
+  const handleGoogleLoginSuccess = async (credentialResponse) => {
+    setLoading(true);
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+
+      const { data } = await createUser({
+        variables: {
+          id: decoded.sub,
+          name: decoded.name,
+          email: decoded.email
+        }
+      });
+
+      if (data && data.createUser) {
+        setUser({
+          uid: data.createUser.id,
+          email: data.createUser.email,
+          displayName: data.createUser.name
+        });
+      } else {
+        throw new Error("Failed to create user");
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      setError("登入過程中發生錯誤");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
     return <PageLoading />;
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
   }
 
   if (!user) {
@@ -42,7 +76,7 @@ export default function Home() {
           <h1 className="text-4xl font-bold mb-5 text-gray-800">消費追蹤器</h1>
           <GoogleLogin
             onSuccess={handleGoogleLoginSuccess}
-            onError={() => console.log('Login Failed')}
+            onError={() => setError("登入失敗")}
           />
         </main>
       </GoogleOAuthProvider>
@@ -72,7 +106,6 @@ export default function Home() {
 
           <div className="bg-white shadow-lg rounded-lg p-6">
             <MonthlyDetails
-              month={selectedMonth}
               userId={user.uid}
               refreshTrigger={refreshKey}
             />
