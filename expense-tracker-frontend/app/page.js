@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from "jwt-decode";
+import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { useMutation, gql } from "@apollo/client";
 import TransactionInput from "@/components/TransactionInput";
 import MonthlyDetails from "@/components/MonthlyDetails";
@@ -18,11 +17,30 @@ const CREATE_USER = gql`
   }
 `;
 
+const GOOGLE_CLIENT_ID = "553025802653-hk87jcvja9bt4mtreh6am4gh04j4g1he.apps.googleusercontent.com";
+
+function LoginButton({ onLoginSuccess, onLoginError }) {
+  const login = useGoogleLogin({
+    onSuccess: (tokenResponse) => {
+      setTimeout(() => onLoginSuccess(tokenResponse), 10);
+    },
+    onError: () => onLoginError()
+  });
+
+  return (
+    <button
+      onClick={() => login()}
+      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-150"
+    >
+      使用 Google 登入
+    </button>
+  );
+}
+
 export default function Home() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [createUser] = useMutation(CREATE_USER);
@@ -31,16 +49,19 @@ export default function Home() {
     setRefreshKey((prevKey) => prevKey + 1);
   }, []);
 
-  const handleGoogleLoginSuccess = async (credentialResponse) => {
+  const handleGoogleLoginSuccess = async (tokenResponse) => {
     setLoading(true);
     try {
-      const decoded = jwtDecode(credentialResponse.credential);
+      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+      });
+      const userInfo = await userInfoResponse.json();
 
       const { data } = await createUser({
         variables: {
-          id: decoded.sub,
-          name: decoded.name,
-          email: decoded.email
+          id: userInfo.sub,
+          name: userInfo.name,
+          email: userInfo.email
         }
       });
 
@@ -71,12 +92,12 @@ export default function Home() {
 
   if (!user) {
     return (
-      <GoogleOAuthProvider clientId={"553025802653-hk87jcvja9bt4mtreh6am4gh04j4g1he.apps.googleusercontent.com"}>
+      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
         <main className="min-h-screen bg-gray-100 flex flex-col justify-center items-center">
           <h1 className="text-4xl font-bold mb-5 text-gray-800">消費追蹤器</h1>
-          <GoogleLogin
-            onSuccess={handleGoogleLoginSuccess}
-            onError={() => setError("登入失敗")}
+          <LoginButton
+            onLoginSuccess={handleGoogleLoginSuccess}
+            onLoginError={() => setError("登入失敗")}
           />
         </main>
       </GoogleOAuthProvider>
