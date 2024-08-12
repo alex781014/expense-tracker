@@ -17,8 +17,6 @@ const CREATE_USER = gql`
   }
 `;
 
-const GOOGLE_CLIENT_ID = "553025802653-hk87jcvja9bt4mtreh6am4gh04j4g1he.apps.googleusercontent.com";
-
 function LoginButton({ onLoginSuccess, onLoginError }) {
   const login = useGoogleLogin({
     onSuccess: (tokenResponse) => {
@@ -92,7 +90,7 @@ export default function Home() {
 
   if (!user) {
     return (
-      <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
         <main className="min-h-screen bg-gray-100 flex flex-col justify-center items-center">
           <h1 className="text-4xl font-bold mb-5 text-gray-800">消費追蹤器</h1>
           <LoginButton
