@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Expense Tracker
 
-## Getting Started
+這是一個簡單的支出追蹤應用程式，幫助您記錄和分析日常開支。
 
-First, run the development server:
+## 重要提醒
+
+**請注意：此應用程式必須在網頁瀏覽器中打開使用。不建議在手機的 WebView 中使用，因為可能會遇到 Google 政策相關的錯誤。**
+
+## 功能
+
+- 新增交易記錄
+- 查看交易明細
+- 按日期範圍和類別查看交易
+- 查看支出分類統計
+
+## 使用說明
+
+1. 在網頁瀏覽器中打開應用程式鏈接：https://expense-tracker-cc7b.vercel.app/
+
+2. 登入您的帳戶（如果需要）。
+
+3. 在「新增交易」區域：
+   - 輸入交易描述
+   - 輸入金額
+   - 選擇類別
+   - 點擊「添加交易」按鈕
+
+4. 在「交易明細」區域：
+   - 使用日期選擇器選擇查看的時間範圍
+   - 切換「詳細明細」和「分類明細」查看不同視圖
+   - 在分類視圖中，可以點擊「詳細」查看某個類別的所有交易
+
+5. 查看頁面底部的總支出金額。
+
+## 注意事項
+
+- 請確保您的網絡連接穩定，以確保數據能夠正確保存和讀取。
+- 如遇到任何問題，請刷新頁面或重新登入。
+- 如果在使用過程中遇到任何錯誤或有改進建議，請聯繫開發者。
+
+## 技術堆疊
+
+- 前端：Next.js
+- 後端：Node.js with Express
+- 數據庫：Firebase Firestore
+- API：GraphQL with Apollo Server
+
+## 安裝與運行（供開發者）
 
 ```bash
+# 克隆儲存庫
+git clone [您的儲存庫URL]
+
+# 進入專案目錄
+cd expense-tracker
+
+# 安裝依賴
+npm install
+
+# 運行開發服務器
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# 構建生產版本
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 貢獻
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+歡迎提交 Pull Requests 來改進這個專案。對於重大更改，請先開一個 issue 來討論您想要改變的內容。
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## 授權
 
-## Learn More
+[在此添加您的授權信息]
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+感謝您使用 Expense Tracker！希望這個工具能幫助您更好地管理個人財務。
