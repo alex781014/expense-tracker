@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { useMutation, gql } from "@apollo/client";
 import TransactionInput from "@/components/TransactionInput";
@@ -36,13 +36,26 @@ function LoginButton({ onLoginSuccess, onLoginError }) {
 }
 
 export default function Home() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
-
+  const [mounted, setMounted] = useState(false);
   const [createUser] = useMutation(CREATE_USER);
-
+  const setUserWithStorage = (userData) => {
+    if (userData) {
+      localStorage.setItem('user', JSON.stringify(userData));
+    } else {
+      localStorage.removeItem('user');
+    }
+    setUser(userData);
+  };
   const handleRefresh = useCallback(() => {
     setRefreshKey((prevKey) => prevKey + 1);
   }, []);
@@ -64,10 +77,11 @@ export default function Home() {
       });
 
       if (data && data.createUser) {
-        setUser({
+        setUserWithStorage({
           uid: data.createUser.id,
           email: data.createUser.email,
-          displayName: data.createUser.name
+          displayName: data.createUser.name,
+          accessToken: tokenResponse.access_token
         });
       } else {
         throw new Error("Failed to create user");
@@ -80,6 +94,20 @@ export default function Home() {
     }
   };
 
+  const handleLogout = () => {
+    setUserWithStorage(null);
+  };
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
   if (loading) {
     return <PageLoading />;
   }
@@ -108,7 +136,7 @@ export default function Home() {
         <div className="flex justify-between items-center">
           <h1 className="text-4xl font-bold text-gray-800">消費追蹤器</h1>
           <button
-            onClick={() => setUser(null)}
+            onClick={handleLogout}
             className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-150"
           >
             登出
