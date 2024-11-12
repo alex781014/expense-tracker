@@ -94,8 +94,7 @@ export default function TransactionInput({ userId, onTransactionAdded }) {
         },
       });
     },
-    onCompleted: (data) => {
-      console.log("Transaction added successfully:", data);
+    onCompleted: () => {
       setDescription("");
       setAmount("");
       setCategory("");
@@ -110,13 +109,7 @@ export default function TransactionInput({ userId, onTransactionAdded }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log("Submitting transaction:", {
-        userId,
-        amount: parseFloat(amount),
-        description,
-        category,
-      });
-      const result = await addTransaction({
+      await addTransaction({
         variables: {
           userId,
           amount: parseFloat(amount),
@@ -124,8 +117,6 @@ export default function TransactionInput({ userId, onTransactionAdded }) {
           category,
         },
       });
-      console.log("Mutation result:", result);
-
 
       const today = new Date();
       const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -142,8 +133,7 @@ export default function TransactionInput({ userId, onTransactionAdded }) {
     } catch (error) {
       console.error("Error in handleSubmit:", error);
       if (error.message.includes("User not found")) {
-        alert("用戶不存在，請先創建用戶帳戶。");
-        // 可能需要導航到用戶創建頁面或觸發用戶創建流程
+        alert("User not found");
       } else {
         alert(`添加交易失敗: ${error.message}`);
       }

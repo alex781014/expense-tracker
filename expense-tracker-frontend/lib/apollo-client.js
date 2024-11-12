@@ -34,7 +34,6 @@ const httpLink = createHttpLink({
 
 const authLink = setContext(async (_, { headers }) => {
   const auth = getAuth();
-  console.log(auth)
   if (auth.currentUser) {
     try {
       const token = await getIdToken(auth.currentUser, true);
