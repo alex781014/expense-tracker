@@ -85,7 +85,7 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
             <span className="text-sm text-gray-500 ml-2">({category})</span>
           </div>
           <div>
-            <span className="font-semibold text-gray-500">${amount.toFixed(2)}</span>
+            <span className="font-semibold text-gray-500">${amount}</span>
             <span className="text-sm text-gray-500 ml-2">
               {new Date(date).toLocaleDateString()}
             </span>
@@ -104,7 +104,7 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
             <span className="text-sm text-gray-500 ml-2">({count} 筆交易)</span>
           </div>
           <div>
-            <span className="font-semibold text-gray-500">${total.toFixed(2)}</span>
+            <span className="font-semibold text-gray-500">${total}</span>
             <button
               onClick={() => {
                 setSelectedCategory(category);
@@ -137,7 +137,7 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
                   <span className="font-medium text-gray-500">{description}</span>
                 </div>
                 <div>
-                  <span className="font-semibold text-gray-500">${amount.toFixed(2)}</span>
+                  <span className="font-semibold text-gray-500">${amount}</span>
                   <span className="text-sm text-gray-500 ml-2">
                     {new Date(date).toLocaleDateString()}
                   </span>
@@ -147,7 +147,7 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
           )}
         </ul>
         <p className="my-2 text-center font-bold text-gray-500">
-          {selectedCategory}消費總計: ${categoryData.total.toFixed(2)} (
+          {selectedCategory}消費總計: ${categoryData.total} (
           {categoryData.count} 筆交易)
         </p>
         <button
@@ -218,7 +218,7 @@ export default function MonthlyDetails({ userId, refreshTrigger = 0 }) {
           {viewMode === "categoryDetail" && renderCategoryDetailView()}
           <div className="mt-4 text-right">
             <span className="font-bold text-gray-500">
-              消費總計為: ${totalAmount.toFixed(2)}
+              消費總計為: ${totalAmount}
             </span>
           </div>
         </>
